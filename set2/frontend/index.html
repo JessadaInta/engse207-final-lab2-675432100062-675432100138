@@ -671,7 +671,9 @@
             }
 
         /* ── STATE ── */
-        const API = '';           // ใช้ relative URL (Nginx จัดการ)
+        const AUTH_API = 'http://localhost:3001';
+        const TASK_API = 'http://localhost:3002';
+        const USER_API = 'http://localhost:3003';           // ใช้ relative URL (Nginx จัดการ)
         let token = localStorage.getItem('jwt_token');
         let currentUser = null;
         let allTasks = [];
@@ -695,55 +697,60 @@
                 el.textContent = msg;
             }
 
-            async function doLogin() {
-                const email = document.getElementById('login-email').value.trim();
-                const password = document.getElementById('login-password').value;
-                if (!email || !password) { showAuthMsg('กรุณากรอกข้อมูลให้ครบ', 'error'); return; }
+    async function doLogin() {
 
-                const btn = document.querySelector('#login-form .btn-primary');
-                btn.innerHTML = '<span class="spinner"></span> กำลังเข้าสู่ระบบ...';
-                btn.disabled = true;
+        const email = document.getElementById('login-email').value.trim();
+        const password = document.getElementById('login-password').value;
 
-                const res = await apiFetch(`${API}/api/auth/login`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ email, password })
-                });
-                const data = await res.json();
+        if (!email || !password) {
+            showAuthMsg('กรุณากรอกข้อมูลให้ครบ', 'error');
+            return;
+        }
 
-                btn.textContent = 'เข้าสู่ระบบ';
-                btn.disabled = false;
+        try {
 
-                if (res.ok) {
-                    token = data.token;
-                    localStorage.setItem('jwt_token', token);
-                    initApp(data.user);
-                } else {
-                    showAuthMsg('❌ ' + (data.error || 'Login ล้มเหลว'), 'error');
-                }
-            }
+            const data = await apiFetch(`${AUTH_API}/api/auth/login`, {
+                method: 'POST',
+                body: JSON.stringify({ email, password })
+            });
+
+            token = data.token;
+            localStorage.setItem('jwt_token', token);
+
+            initApp(data.user);
+
+        } catch (err) {
+            showAuthMsg('❌ ' + err.message, 'error');
+        }
+    }
 
             async function doRegister() {
-                const name = document.getElementById('reg-name').value.trim();
-                const email = document.getElementById('reg-email').value.trim();
-                const password = document.getElementById('reg-password').value;
-                if (!name || !email || !password) { showAuthMsg('กรุณากรอกข้อมูลให้ครบ', 'error'); return; }
 
-                const res = await apiFetch(`${API}/api/auth/register`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ name, email, password })
-                });
-                const data = await res.json();
+                    const username = document.getElementById('reg-name').value.trim();
+                    const email = document.getElementById('reg-email').value.trim();
+                    const password = document.getElementById('reg-password').value;
 
-                if (res.ok) {
-                    token = data.token;
-                    localStorage.setItem('jwt_token', token);
-                    initApp(data.user);
-                } else {
-                    showAuthMsg('❌ ' + (data.error || 'สมัครไม่สำเร็จ'), 'error');
+                    if (!username || !email || !password) {
+                        showAuthMsg('กรุณากรอก email, password และ username', 'error');
+                        return;
+                    }
+
+                    try {
+
+                        const data = await apiFetch(`${AUTH_API}/api/auth/register`, {
+                            method: 'POST',
+                            body: JSON.stringify({ username, email, password })
+                        });
+
+                        token = data.token;
+                        localStorage.setItem('jwt_token', token);
+
+                        initApp(data.user);
+
+                    } catch (err) {
+                        showAuthMsg('❌ ' + err.message, 'error');
+                    }
                 }
-            }
 
             function doLogout() {
                 localStorage.removeItem('jwt_token');
@@ -787,7 +794,7 @@
 
         try {
 
-            const res = await apiFetch("/api/tasks/");
+            const res = await apiFetch(`${TASK_API}/api/tasks/`);
             const tasks = res.tasks || [];
 
             allTasks = tasks;   // ⭐ สำคัญ
@@ -920,14 +927,14 @@
         let res;
         if (id) {
             // PUT — update existing
-            res = await apiFetch(`${API}/api/tasks/${id}`, {
+            res = await apiFetch(`${TASK_API}/api/tasks/${id}`, {
                 method: 'PUT',
                 headers: authHeaders(),
                 body: JSON.stringify(body)
             });
         } else {
             // POST — create new
-            res = await apiFetch(`${API}/api/tasks/`, {
+            res = await apiFetch(`${TASK_API}/api/tasks/`, {
                 method: 'POST',
                 headers: authHeaders(),
                 body: JSON.stringify(body)
@@ -949,7 +956,7 @@
     }
 
     async function quickStatusUpdate(id, newStatus) {
-        const res = await apiFetch(`${API}/api/tasks/${id}`, {
+        const res = await apiFetch(`${TASK_API}/api/tasks/${id}`, {
             method: 'PUT',
             headers: authHeaders(),
             body: JSON.stringify({ status: newStatus })
@@ -970,7 +977,7 @@
         deleteTargetId = id;
         document.getElementById('confirm-modal').classList.remove('hidden');
         document.getElementById('confirm-delete-btn').onclick = async () => {
-            const res = await apiFetch(`${API}/api/tasks/${deleteTargetId}`, {
+            const res = await apiFetch(`${TASK_API}/api/tasks/${deleteTargetId}`, {
                 method: 'DELETE',
                 headers: authHeaders()
             });
@@ -994,7 +1001,7 @@
        PROFILE
     ───────────────────────────────────── */
     async function loadProfile() {
-        const data = await apiFetch(`${API}/api/users/me`);
+        const data = await apiFetch(`${USER_API}/api/users/me`);
         const u = data.user || currentUser;
         if (!u) return;
 
@@ -1068,7 +1075,7 @@
         /* ── AUTO-LOGIN ── */
         if (token) {
             (async () => {
-                const res = await fetch(`${API}/api/auth/verify`, {
+                const res = await fetch(`${AUTH_API}/api/auth/verify`, {
                     headers: { Authorization: `Bearer ${token}` }
                 });
                 const data = await res.json();
