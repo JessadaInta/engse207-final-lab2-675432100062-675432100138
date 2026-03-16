@@ -360,39 +360,60 @@
 </style>
 </head>
 <body>
+<!-- ════════════════════════════════════
+     AUTH PAGE
+════════════════════════════════════ -->
+<div id="auth-page">
+    <div class="auth-box">
+        <div class="auth-logo">🔐</div>
+        <div class="auth-title">Task Board</div>
+        <div class="auth-subtitle">Week 12 — Security Architecture</div>
 
-    <!-- ════ AUTH PAGE ════ -->
-    <div id="auth-page">
-        <div class="auth-box">
-            <div class="auth-logo">🔐</div>
-            <div class="auth-title">Task Board</div>
-            <div class="auth-subtitle">Final Lab — Security Architecture</div>
+        <div class="auth-tabs">
+            <button class="auth-tab active" onclick="switchTab('login')">Login</button>
+            <button class="auth-tab" onclick="switchTab('register')">Register</button>
+        </div>
 
-            <!-- Login Form เท่านั้น (ไม่มี Register tab) -->
-            <div id="login-form">
-                <div class="form-group">
-                    <label>Email</label>
-                    <input id="login-email" type="email" value="alice@lab.local" placeholder="you@lab.local">
-                </div>
-                <div class="form-group">
-                    <label>Password</label>
-                    <input id="login-password" type="password" value="alice123" placeholder="password">
-                </div>
-                <button class="btn-primary" onclick="doLogin()">เข้าสู่ระบบ</button>
+        <!-- Login Form -->
+        <div id="login-form">
+            <div class="form-group">
+                <label>Email</label>
+                <input id="login-email" type="email" value="alice@example.com" placeholder="you@example.com">
             </div>
-
-            <div id="auth-msg"></div>
-
-            <!-- Seed users hint -->
-            <div class="auth-hint"
-                style="margin-top:1rem;padding:.75rem;background:rgba(59,130,246,.1);border-radius:.5rem;font-size:.82rem">
-                <strong>🔑 Seed Users:</strong><br>
-                alice@lab.local / alice123 (member)<br>
-                bob@lab.local / bob456 (member)<br>
-                admin@lab.local / adminpass (admin)
+            <div class="form-group">
+                <label>Password</label>
+                <input id="login-password" type="password" value="password123" placeholder="password">
             </div>
+            <button class="btn-primary" onclick="doLogin()">เข้าสู่ระบบ</button>
+        </div>
+
+        <!-- Register Form -->
+        <div id="register-form" class="hidden">
+            <div class="form-group">
+                <label>ชื่อ</label>
+                <input id="reg-name" type="text" placeholder="ชื่อ-นามสกุล">
+            </div>
+            <div class="form-group">
+                <label>Email</label>
+                <input id="reg-email" type="email" placeholder="you@example.com">
+            </div>
+            <div class="form-group">
+                <label>Password (อย่างน้อย 6 ตัว)</label>
+                <input id="reg-password" type="password" placeholder="password">
+            </div>
+            <button class="btn-primary" onclick="doRegister()">สมัครสมาชิก</button>
+        </div>
+
+        <div id="auth-msg"></div>
+
+        <div class="auth-hint">
+            <strong>ข้อมูลทดสอบ:</strong><br>
+            alice@lab.local / alice123 (member)<br>
+            bob@lab.local / bob456 (member)<br>
+            admin@lab.local / adminpass (admin)
         </div>
     </div>
+</div>
 
     <!-- ════ MAIN APP ════ -->
     <div id="app-page" class="hidden">
@@ -656,40 +677,81 @@
         let allTasks = [];
         let currentFilter = 'ALL';
 
-        /* ── AUTH ── (ลบ doRegister() ออก) ── */
-        async function doLogin() {
-            const email = document.getElementById('login-email').value.trim();
-            const password = document.getElementById('login-password').value;
-            if (!email || !password) { showAuthMsg('กรุณากรอกข้อมูลให้ครบ', 'error'); return; }
-
-            const res = await fetch(`${API}/api/auth/login`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ email, password })
-            });
-            const data = await res.json();
-
-            if (res.ok) {
-                token = data.token;
-                localStorage.setItem('jwt_token', token);
-                initApp(data.user);
-            } else {
-                showAuthMsg('❌ ' + (data.error || 'Login ล้มเหลว'), 'error');
+        /* ─────────────────────────────────────
+       AUTH
+    ───────────────────────────────────── */
+            function switchTab(tab) {
+                document.getElementById('login-form').classList.toggle('hidden', tab !== 'login');
+                document.getElementById('register-form').classList.toggle('hidden', tab !== 'register');
+                document.querySelectorAll('.auth-tab').forEach((el, i) => {
+                    el.classList.toggle('active', (i === 0 && tab === 'login') || (i === 1 && tab === 'register'));
+                });
+                document.getElementById('auth-msg').textContent = '';
             }
-        }
 
-        function showAuthMsg(msg, type) {
-            const el = document.getElementById('auth-msg');
-            el.className = `auth-msg ${type}`;
-            el.textContent = msg;
-        }
+            function showAuthMsg(msg, type) {
+                const el = document.getElementById('auth-msg');
+                el.className = `auth-msg ${type}`;
+                el.textContent = msg;
+            }
 
-        function doLogout() {
-            localStorage.removeItem('jwt_token');
-            token = null; currentUser = null; allTasks = [];
-            document.getElementById('app-page').classList.add('hidden');
-            document.getElementById('auth-page').classList.remove('hidden');
-        }
+            async function doLogin() {
+                const email = document.getElementById('login-email').value.trim();
+                const password = document.getElementById('login-password').value;
+                if (!email || !password) { showAuthMsg('กรุณากรอกข้อมูลให้ครบ', 'error'); return; }
+
+                const btn = document.querySelector('#login-form .btn-primary');
+                btn.innerHTML = '<span class="spinner"></span> กำลังเข้าสู่ระบบ...';
+                btn.disabled = true;
+
+                const res = await apiFetch(`${API}/api/auth/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password })
+                });
+                const data = await res.json();
+
+                btn.textContent = 'เข้าสู่ระบบ';
+                btn.disabled = false;
+
+                if (res.ok) {
+                    token = data.token;
+                    localStorage.setItem('jwt_token', token);
+                    initApp(data.user);
+                } else {
+                    showAuthMsg('❌ ' + (data.error || 'Login ล้มเหลว'), 'error');
+                }
+            }
+
+            async function doRegister() {
+                const name = document.getElementById('reg-name').value.trim();
+                const email = document.getElementById('reg-email').value.trim();
+                const password = document.getElementById('reg-password').value;
+                if (!name || !email || !password) { showAuthMsg('กรุณากรอกข้อมูลให้ครบ', 'error'); return; }
+
+                const res = await apiFetch(`${API}/api/auth/register`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name, email, password })
+                });
+                const data = await res.json();
+
+                if (res.ok) {
+                    token = data.token;
+                    localStorage.setItem('jwt_token', token);
+                    initApp(data.user);
+                } else {
+                    showAuthMsg('❌ ' + (data.error || 'สมัครไม่สำเร็จ'), 'error');
+                }
+            }
+
+            function doLogout() {
+                localStorage.removeItem('jwt_token');
+                token = null; currentUser = null; allTasks = [];
+                document.getElementById('app-page').classList.add('hidden');
+                document.getElementById('auth-page').classList.remove('hidden');
+                logApiCall('POST', '/api/auth/logout (client-side)', 200, 0);
+            }
 
         /* ── APP INIT ── */
         async function initApp(user) {

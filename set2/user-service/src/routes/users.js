@@ -9,6 +9,40 @@ router.get('/health', (req, res) => {
   res.json({ status: 'ok', service: 'user-service' });
 });
 
+// เพิ่ม create profile
+router.post('/', async (req, res) => {
+
+  const { user_id, username, email, role } = req.body;
+
+  try {
+
+    const result = await pool.query(
+      `INSERT INTO user_profiles (user_id,username,email,role)
+       VALUES ($1,$2,$3,$4)
+       RETURNING *`,
+      [user_id, username, email, role]
+    );
+
+    res.status(201).json(result.rows[0]);
+
+  } catch (err) {
+
+    if (err.code === '23505') {
+      return res.status(409).json({
+        error: 'profile exists'
+      });
+    }
+
+    console.error('[USER] create profile error:', err.message);
+
+    res.status(500).json({
+      error: 'Server error'
+    });
+
+  }
+
+});
+
 // GET /api/users/me — ดูโปรไฟล์ตัวเอง (ต้อง login)
 router.get('/me', requireAuth, async (req, res) => {
   try {
@@ -26,18 +60,46 @@ router.get('/me', requireAuth, async (req, res) => {
   }
 });
 
+// POST /api/users  (internal use จาก auth-service)
+router.post('/', async (req, res) => {
+  const { user_id, username, email, role } = req.body;
+
+  try {
+
+    const result = await pool.query(
+      `INSERT INTO user_profiles (user_id, username, email, role)
+       VALUES ($1,$2,$3,$4)
+       RETURNING *`,
+      [user_id, username, email, role]
+    );
+
+    res.status(201).json(result.rows[0]);
+
+  } catch (err) {
+
+    if (err.code === '23505') {
+      return res.status(409).json({ error: 'profile exists' });
+    }
+
+    console.error('[USER] create profile error:', err.message);
+    res.status(500).json({ error: 'Server error' });
+
+  }
+});
+
 // PUT /api/users/me — แก้ไขโปรไฟล์ตัวเอง (ต้อง login)
 router.put('/me', requireAuth, async (req, res) => {
-  const { name, email } = req.body;
+  const { username, email } = req.body;
+  const userId = req.user.sub;
 
   try {
     const result = await pool.query(
       `UPDATE user_profiles
-       SET name = COALESCE($1, name),
-           email = COALESCE($2, email)
-       WHERE user_id = $3
-       RETURNING id, user_id, name, email, role, updated_at`,
-      [name, email, req.user.sub]
+ SET username = COALESCE($1, username),
+     email = COALESCE($2, email)
+ WHERE user_id = $3
+ RETURNING id, user_id, username, email, role, updated_at`,
+      [username, email, userId]
     );
 
     if (!result.rows[0]) {
@@ -59,7 +121,7 @@ router.put('/me', requireAuth, async (req, res) => {
 router.get('/', requireAuth, requireRole('admin'), async (req, res) => {
   try {
     const result = await pool.query(
-      'SELECT id, user_id, name, email, role, created_at FROM user_profiles ORDER BY created_at DESC'
+      'SELECT id, user_id, username, email, role, updated_at FROM user_profiles ORDER BY updated_at DESC'
     );
     res.json({ users: result.rows, total: result.rowCount });
   } catch (err) {

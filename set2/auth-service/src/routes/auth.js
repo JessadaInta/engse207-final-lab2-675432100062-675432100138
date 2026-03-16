@@ -1,17 +1,19 @@
-const express  = require('express');
-const bcrypt   = require('bcryptjs');
+const express = require('express');
+const bcrypt = require('bcryptjs');
+const axios = require('axios');
 const { pool } = require('../db/db');
 const { generateToken, verifyToken } = require('../middleware/jwtUtils');
 
 const router = express.Router();
 
+
 // ─────────────────────────────────────────────
-// POST /api/auth/register — สมัครสมาชิกใหม่
+// POST /api/auth/register
 // ─────────────────────────────────────────────
 router.post('/register', async (req, res) => {
+
   const { email, password, username } = req.body;
 
-  // Validate input
   if (!email || !password || !username) {
     return res.status(400).json({
       error: 'กรุณากรอก email, password และ username'
@@ -25,37 +27,50 @@ router.post('/register', async (req, res) => {
   }
 
   try {
-    // Hash password
+
     const passwordHash = await bcrypt.hash(password, 10);
 
     const result = await pool.query(
       `INSERT INTO users (username, email, password_hash, role)
-       VALUES ($1, $2, $3, 'member')
-       RETURNING id, username, email, role`,
+       VALUES ($1,$2,$3,'member')
+       RETURNING id,username,email,role`,
       [username, email.toLowerCase(), passwordHash]
     );
 
     const user = result.rows[0];
 
-    // ออก JWT
+    // 🔥 CALL USER SERVICE
+    try {
+
+      await axios.post(
+        'http://user-service:3003/api/users',
+        {
+          user_id: user.id,
+          username: user.username,
+          email: user.email,
+          role: user.role
+        }
+      );
+
+      console.log('[AUTH] Profile created in user-service');
+
+    } catch (err) {
+
+      console.error('[AUTH] user-service error:', err.message);
+
+    }
+
     const token = generateToken({
-      sub:   user.id,
+      sub: user.id,
       email: user.email,
-      role:  user.role,
+      role: user.role,
       username: user.username
     });
-
-    console.log(`[AUTH] Register success: ${email}`);
 
     res.status(201).json({
       message: 'สมัครสมาชิกสำเร็จ',
       token,
-      user: {
-        id: user.id,
-        username: user.username,
-        email: user.email,
-        role: user.role
-      }
+      user
     });
 
   } catch (err) {
@@ -68,12 +83,14 @@ router.post('/register', async (req, res) => {
 
     console.error('[AUTH] Register error:', err.message);
     res.status(500).json({ error: 'Server error' });
+
   }
+
 });
 
 
 // ─────────────────────────────────────────────
-// POST /api/auth/login — เข้าสู่ระบบ
+// POST /api/auth/login
 // ─────────────────────────────────────────────
 router.post('/login', async (req, res) => {
 
@@ -88,29 +105,28 @@ router.post('/login', async (req, res) => {
   try {
 
     const result = await pool.query(
-      'SELECT * FROM users WHERE email = $1',
+      'SELECT * FROM users WHERE email=$1',
       [email.toLowerCase()]
     );
 
     const user = result.rows[0];
 
-    const dummyHash =
-      '$2b$10$invalidhashpadding000000000000000000000000000000000000';
-
-    const passwordHash = user ? user.password_hash : dummyHash;
-
-    const isValid = await bcrypt.compare(password, passwordHash);
-
-    if (!user || !isValid) {
-      console.log(`[AUTH] Login failed: ${email}`);
+    if (!user) {
       return res.status(401).json({
         error: 'Email หรือ Password ไม่ถูกต้อง'
       });
     }
 
-    // update last login
+    const isValid = await bcrypt.compare(password, user.password_hash);
+
+    if (!isValid) {
+      return res.status(401).json({
+        error: 'Email หรือ Password ไม่ถูกต้อง'
+      });
+    }
+
     await pool.query(
-      'UPDATE users SET last_login = NOW() WHERE id = $1',
+      'UPDATE users SET last_login = NOW() WHERE id=$1',
       [user.id]
     );
 
@@ -120,8 +136,6 @@ router.post('/login', async (req, res) => {
       role: user.role,
       username: user.username
     });
-
-    console.log(`[AUTH] Login success: ${email}`);
 
     res.json({
       message: 'Login สำเร็จ',
@@ -140,45 +154,12 @@ router.post('/login', async (req, res) => {
     res.status(500).json({ error: 'Server error' });
 
   }
+
 });
 
 
 // ─────────────────────────────────────────────
-// GET /api/auth/verify — ตรวจสอบ token
-// ─────────────────────────────────────────────
-router.get('/verify', (req, res) => {
-
-  const authHeader = req.headers['authorization'];
-  const token = authHeader && authHeader.split(' ')[1];
-
-  if (!token) {
-    return res.status(401).json({
-      valid: false,
-      error: 'No token provided'
-    });
-  }
-
-  try {
-
-    const decoded = verifyToken(token);
-
-    res.json({
-      valid: true,
-      user: decoded
-    });
-
-  } catch (err) {
-
-    res.status(401).json({
-      valid: false,
-      error: err.message
-    });
-
-  }
-});
-
-// ─────────────────────────────────────────────
-// GET /api/auth/me — ดูข้อมูล user จาก token
+// GET /api/auth/me
 // ─────────────────────────────────────────────
 router.get('/me', (req, res) => {
 
@@ -199,7 +180,7 @@ router.get('/me', (req, res) => {
       user: decoded
     });
 
-  } catch (err) {
+  } catch {
 
     res.status(401).json({
       error: 'Invalid token'
@@ -207,18 +188,6 @@ router.get('/me', (req, res) => {
 
   }
 
-});
-
-
-// ─────────────────────────────────────────────
-// GET /api/auth/health — health check
-// ─────────────────────────────────────────────
-router.get('/health', (req, res) => {
-  res.json({
-    status: 'ok',
-    service: 'auth-service',
-    time: new Date()
-  });
 });
 
 module.exports = router;

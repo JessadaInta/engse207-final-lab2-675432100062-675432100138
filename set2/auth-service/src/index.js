@@ -28,6 +28,10 @@ app.get('/health', (req, res) => {
   res.json({ status: "auth-service ok" });
 });
 
+app.get('/api/auth/health', (req, res) => {
+  res.json({ status: "auth-service ok" });
+});
+
 // 404
 app.use((req, res) => {
   res.status(404).json({ error: 'Route not found', path: req.path });

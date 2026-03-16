@@ -8,6 +8,15 @@ CREATE TABLE IF NOT EXISTS users (
   last_login    TIMESTAMP
 );
 
+INSERT INTO users (username,email,password_hash,role)
+VALUES
+(
+'admin',
+'admin@lab.local',
+'$2b$10$EixZaYVK1fsbw1ZfbX3OXePaWxn96p36m0q9QpG6uH0WIMRqjYO0a',
+'admin'
+);
+
 CREATE TABLE IF NOT EXISTS logs (
   id         SERIAL PRIMARY KEY,
   level      VARCHAR(10)  NOT NULL,

@@ -12,7 +12,7 @@ CREATE TABLE IF NOT EXISTS user_profiles (
 
 CREATE TABLE IF NOT EXISTS logs (
   id         SERIAL PRIMARY KEY,
-  level      VARCHAR(10)  NOT NULL,
+  level      VARCHAR(10) NOT NULL,
   event      VARCHAR(100) NOT NULL,
   user_id    INTEGER,
   message    TEXT,
