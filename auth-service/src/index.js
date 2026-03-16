@@ -1,4 +1,5 @@
 require('dotenv').config();
+
 const express = require('express');
 const cors    = require('cors');
 const morgan  = require('morgan');
@@ -8,18 +9,21 @@ const authRoutes = require('./routes/auth');
 const app  = express();
 const PORT = process.env.PORT || 3001;
 
+// CORS
 app.use(cors({
   origin: '*',
   methods: ['GET','POST','PUT','DELETE','OPTIONS'],
   allowedHeaders: ['Content-Type','Authorization']
 }));
 
-app.options('*', cors());
+// body parser
 app.use(express.json());
 
+// logger
 morgan.token('body-size', (req) => {
   return req.body ? JSON.stringify(req.body).length + 'b' : '0b';
 });
+
 app.use(morgan(':method :url :status :response-time ms - body::body-size', {
   stream: {
     write: (msg) => console.log(msg.trim())
@@ -29,7 +33,7 @@ app.use(morgan(':method :url :status :response-time ms - body::body-size', {
 // routes
 app.use('/api/auth', authRoutes);
 
-// health endpoint
+// health check
 app.get('/health', (req, res) => {
   res.json({ status: "auth-service ok" });
 });
@@ -38,20 +42,26 @@ app.get('/api/auth/health', (req, res) => {
   res.json({ status: "auth-service ok" });
 });
 
-// 404
+// 404 handler
 app.use((req, res) => {
-  res.status(404).json({ error: 'Route not found', path: req.path });
+  res.status(404).json({
+    error: 'Route not found',
+    path: req.path
+  });
 });
 
 // error handler
 app.use((err, req, res, _next) => {
   console.error('[ERROR]', err.message);
-  res.status(500).json({ error: 'Internal Server Error' });
+  res.status(500).json({
+    error: 'Internal Server Error'
+  });
 });
 
 async function start() {
 
   let retries = 10;
+
   while (retries > 0) {
     try {
       await initDB();
