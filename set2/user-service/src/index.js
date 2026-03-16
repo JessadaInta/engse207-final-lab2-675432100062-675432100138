@@ -7,11 +7,12 @@ const userRoutes = require('./routes/users');
 
 app.use('/api/users', userRoutes);
 
+// health check
 app.get('/health', (req, res) => {
   res.json({ status: "user-service ok" });
 });
 
-const PORT = 3000;
+const PORT = 3003;
 
 app.listen(PORT, () => {
   console.log(`User Service running on port ${PORT}`);

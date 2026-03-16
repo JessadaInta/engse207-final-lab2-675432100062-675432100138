@@ -16,6 +16,6 @@ USER appuser
 EXPOSE 3001
 
 HEALTHCHECK --interval=30s --timeout=5s --retries=3 \
-  CMD wget -qO- http://localhost:3001/api/auth/health || exit 1
+  CMD wget -qO- http://localhost:3002/api/tasks/health || exit 1
 
 CMD ["node", "src/index.js"]

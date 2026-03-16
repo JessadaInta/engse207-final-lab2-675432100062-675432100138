@@ -8,37 +8,39 @@ const authRoutes = require('./routes/auth');
 const app  = express();
 const PORT = process.env.PORT || 3001;
 
-// ── Middleware ──
 app.use(cors());
 app.use(express.json());
 
-// Morgan: log ทุก request ในรูปแบบที่ Loki อ่านได้
 morgan.token('body-size', (req) => {
   return req.body ? JSON.stringify(req.body).length + 'b' : '0b';
 });
 app.use(morgan(':method :url :status :response-time ms - body::body-size', {
   stream: {
-    write: (msg) => console.log(msg.trim())  // stdout → Docker log driver
+    write: (msg) => console.log(msg.trim())
   }
 }));
 
-// ── Routes ──
+// routes
 app.use('/api/auth', authRoutes);
 
-// 404 handler
+// health endpoint
+app.get('/health', (req, res) => {
+  res.json({ status: "auth-service ok" });
+});
+
+// 404
 app.use((req, res) => {
   res.status(404).json({ error: 'Route not found', path: req.path });
 });
 
-// Error handler
+// error handler
 app.use((err, req, res, _next) => {
   console.error('[ERROR]', err.message);
   res.status(500).json({ error: 'Internal Server Error' });
 });
 
-// ── Start ──
 async function start() {
-  // รอ DB พร้อม
+
   let retries = 10;
   while (retries > 0) {
     try {
@@ -53,7 +55,6 @@ async function start() {
 
   app.listen(PORT, () => {
     console.log(`[auth-service] Running on port ${PORT}`);
-    console.log(`[auth-service] JWT_EXPIRES: ${process.env.JWT_EXPIRES || '1h'}`);
   });
 }
 

@@ -4,6 +4,11 @@ const requireAuth   = require('../middleware/authMiddleware');
 
 const router = express.Router();
 
+//health check
+router.get('/health', (req, res) => {
+  res.json({ status: "task-service ok" });
+});
+
 // Helper: ส่ง log
 async function logEvent({ level, event, userId, ip, method, path, statusCode, message, meta }) {
   try {

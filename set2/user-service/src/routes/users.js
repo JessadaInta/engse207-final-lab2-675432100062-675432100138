@@ -3,7 +3,12 @@ const router = express.Router();
 const db = require('../db/db');
 const requireAuth = require('../middleware/authMiddleware');
 
-// ทุก endpoint ต้องใช้ JWT
+// health check (ไม่ต้องใช้ JWT)
+router.get('/health', (req, res) => {
+  res.json({ status: "user-service ok" });
+});
+
+// ทุก endpoint หลังจากนี้ต้องใช้ JWT
 router.use(requireAuth);
 
 /**

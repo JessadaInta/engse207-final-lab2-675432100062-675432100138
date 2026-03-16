@@ -22,3 +22,8 @@ async function initDB() {
 
   console.log('[auth-db] Tables initialized');
 }
+
+module.exports = {
+  pool,
+  initDB
+};
