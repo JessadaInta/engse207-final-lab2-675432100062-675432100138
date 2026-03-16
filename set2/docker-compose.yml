@@ -1,4 +1,5 @@
 services:
+
   auth-db:
     image: postgres:15
     environment:
@@ -32,12 +33,13 @@ services:
     volumes:
       - ./user-service/init.sql:/docker-entrypoint-initdb.d/init.sql
 
+
   auth-service:
     build: ./auth-service
+    env_file:
+      - .env
     environment:
       DATABASE_URL: postgres://auth_user:auth_secret@auth-db:5432/auth_db
-      JWT_SECRET: dev-shared-secret
-      JWT_EXPIRES_IN: 1h
       PORT: 3001
       NODE_ENV: development
     ports:
@@ -45,11 +47,13 @@ services:
     depends_on:
       - auth-db
 
+
   task-service:
     build: ./task-service
+    env_file:
+      - .env
     environment:
       DATABASE_URL: postgres://task_user:task_secret@task-db:5432/task_db
-      JWT_SECRET: dev-shared-secret
       PORT: 3002
       NODE_ENV: development
     ports:
@@ -57,11 +61,13 @@ services:
     depends_on:
       - task-db
 
+
   user-service:
     build: ./user-service
+    env_file:
+      - .env
     environment:
       DATABASE_URL: postgres://user_user:user_secret@user-db:5432/user_db
-      JWT_SECRET: dev-shared-secret
       PORT: 3003
       NODE_ENV: development
     ports:

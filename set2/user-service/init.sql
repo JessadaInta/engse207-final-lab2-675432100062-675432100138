@@ -10,6 +10,10 @@ CREATE TABLE IF NOT EXISTS user_profiles (
   updated_at   TIMESTAMP DEFAULT NOW()
 );
 
+INSERT INTO user_profiles (user_id,username,email,role)
+VALUES (1,'admin','admin@lab.local','admin')
+ON CONFLICT (user_id) DO NOTHING;
+
 CREATE TABLE IF NOT EXISTS logs (
   id         SERIAL PRIMARY KEY,
   level      VARCHAR(10) NOT NULL,

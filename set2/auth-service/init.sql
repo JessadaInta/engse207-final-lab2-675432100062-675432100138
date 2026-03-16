@@ -13,7 +13,7 @@ VALUES
 (
 'admin',
 'admin@lab.local',
-'$2b$10$EixZaYVK1fsbw1ZfbX3OXePaWxn96p36m0q9QpG6uH0WIMRqjYO0a',
+'$2b$10$f3Aha3p9oVMqXG4Q6DnE7uiI1uxpOopewnVHPjJ.xg9leMm8h8c2S',
 'admin'
 );
 
