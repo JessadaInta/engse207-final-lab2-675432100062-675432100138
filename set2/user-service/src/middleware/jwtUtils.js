@@ -9,7 +9,7 @@ const JWT_EXPIRES = process.env.JWT_EXPIRES || '1h';
  * @returns {string} JWT token string
  */
 function generateToken(payload) {
-    return jwt.sign(payload, JWT_SECRET, { expiresIn: JWT_EXPIRES });
+  return jwt.sign(payload, JWT_SECRET, { expiresIn: JWT_EXPIRES });
 }
 
 /**
