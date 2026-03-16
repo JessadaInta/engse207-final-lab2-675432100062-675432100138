@@ -12,9 +12,9 @@ CREATE TABLE IF NOT EXISTS user_profiles (
 
 INSERT INTO user_profiles (user_id,username,email,role) VALUES 
 (1,'admin','admin@lab.local','admin'),
-(2, 'Alice Smith', 'alice@example.com', 'member'),
-(3, 'Bob Jones',   'bob@example.com',   'member'),
-(4, 'admin2', 'admin2@example.com', 'admin')
+(2, 'Alice Smith', 'alice@lab.local', 'member'),
+(3, 'Bob Jones',   'bob@lab.local',   'member'),
+(4, 'admin2', 'admin2@lab.local', 'admin')
 ON CONFLICT (user_id) DO NOTHING;
 
 CREATE TABLE IF NOT EXISTS logs (

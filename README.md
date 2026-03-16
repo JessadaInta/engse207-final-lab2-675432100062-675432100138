@@ -15,7 +15,7 @@
 - นายเจษฎา  อินตา / รหัสนักศึกษา: 67543210006-2
 - นายจักรภัทร  พรมทา / รหัสนักศึกษา: 67543210013-8
 
-**Repository:** `https://github.com/ch4kkapatPR/final-lab.git`
+**Repository:** `https://github.com/JessadaInta/engse207-final-lab2-675432100062-675432100138.git`
 
 ---
 
