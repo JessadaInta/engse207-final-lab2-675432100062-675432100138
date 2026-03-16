@@ -12,11 +12,13 @@ const pool = new Pool({
 async function initDB() {
   const fs = require('fs');
   const path = require('path');
+
   const sql = fs.readFileSync(
-    path.join(__dirname, 'init.sql'), 'utf8'
+    path.join(__dirname, '../../init.sql'),
+    'utf8'
   );
+
   await pool.query(sql);
+
   console.log('[auth-db] Tables initialized');
 }
-
-module.exports = { pool, initDB };

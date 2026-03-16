@@ -33,10 +33,90 @@ async function logEvent({ service='auth-service', level, event, userId, ip, meth
     // ถ้า log service ไม่ตอบ ไม่ต้องหยุดการทำงาน
   }
 }
+// ─────────────────────────────────────────────
+// POST /api/auth/register
+// สมัครสมาชิกใหม่
+// ─────────────────────────────────────────────
+router.post('/register', async (req, res) => {
+  const { username, email, password } = req.body;
+  const ip = req.headers['x-real-ip'] || req.ip;
 
+  if (!username || !email || !password) {
+    return res.status(400).json({ error: 'กรุณากรอก username email และ password' });
+  }
+
+  const normalizedEmail = String(email).trim().toLowerCase();
+
+  try {
+
+    // เช็ค email ซ้ำ
+    const exists = await pool.query(
+      'SELECT id FROM users WHERE email=$1',
+      [normalizedEmail]
+    );
+
+    if (exists.rows.length > 0) {
+      return res.status(409).json({ error: 'Email นี้ถูกใช้แล้ว' });
+    }
+
+    // hash password
+    const passwordHash = await bcrypt.hash(password, 10);
+
+    // insert user
+    const result = await pool.query(
+      `INSERT INTO users (username,email,password_hash)
+       VALUES ($1,$2,$3)
+       RETURNING id,username,email,role`,
+      [username, normalizedEmail, passwordHash]
+    );
+
+    const user = result.rows[0];
+
+    const token = generateToken({
+      sub: user.id,
+      email: user.email,
+      role: user.role,
+      username: user.username
+    });
+
+    await logEvent({
+      level: 'INFO',
+      event: 'REGISTER_SUCCESS',
+      userId: user.id,
+      ip,
+      method: 'POST',
+      path: '/api/auth/register',
+      statusCode: 201,
+      message: `User ${user.username} registered`,
+      meta: { email: user.email }
+    });
+
+    res.status(201).json({
+      message: 'สมัครสมาชิกสำเร็จ',
+      token,
+      user
+    });
+
+  } catch (err) {
+
+    console.error('[AUTH] Register error:', err.message);
+
+    await logEvent({
+      level: 'ERROR',
+      event: 'REGISTER_ERROR',
+      ip,
+      method: 'POST',
+      path: '/api/auth/register',
+      statusCode: 500,
+      message: err.message
+    });
+
+    res.status(500).json({ error: 'Server error' });
+
+  }
+});
 // ─────────────────────────────────────────────
 // POST /api/auth/login
-// ❌ ไม่มี /register — ใช้ Seed Users เท่านั้น
 // ─────────────────────────────────────────────
 router.post('/login', async (req, res) => {
   const { email, password } = req.body;
