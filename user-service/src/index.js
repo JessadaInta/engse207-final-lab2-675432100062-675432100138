@@ -6,7 +6,13 @@ const morgan  = require('morgan');
 const { initDB } = require('./db/db');
 const userRoutes = require('./routes/users');
 
-const app  = express();
+app.use(cors({
+  origin: '*',
+  methods: ['GET','POST','PUT','DELETE','OPTIONS'],
+  allowedHeaders: ['Content-Type','Authorization']
+}));
+
+app.options('*', cors());
 const PORT = process.env.PORT || 3003;
 
 app.use(cors());
