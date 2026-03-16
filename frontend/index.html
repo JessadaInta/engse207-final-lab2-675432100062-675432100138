@@ -672,9 +672,9 @@
             }
 
         /* ── STATE ── */
-        const AUTH_API = 'http://localhost:3001';
-        const TASK_API = 'http://localhost:3002';
-        const USER_API = 'http://localhost:3003';           // ใช้ relative URL (Nginx จัดการ)
+        const AUTH_API = window.APP_CONFIG.AUTH_URL;
+        const TASK_API = window.APP_CONFIG.TASK_URL;
+        const USER_API = window.APP_CONFIG.USER_URL;           // ใช้ relative URL (Nginx จัดการ)
         let token = localStorage.getItem('jwt_token');
         let currentUser = null;
         let allTasks = [];
