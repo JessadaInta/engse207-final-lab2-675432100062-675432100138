@@ -6,6 +6,9 @@ const morgan  = require('morgan');
 const { initDB } = require('./db/db');
 const userRoutes = require('./routes/users');
 
+const app  = express();
+const PORT = process.env.PORT || 3003;
+
 app.use(cors({
   origin: '*',
   methods: ['GET','POST','PUT','DELETE','OPTIONS'],
@@ -13,7 +16,7 @@ app.use(cors({
 }));
 
 app.options('*', cors());
-const PORT = process.env.PORT || 3003;
+
 
 app.use(cors());
 app.use(express.json());
