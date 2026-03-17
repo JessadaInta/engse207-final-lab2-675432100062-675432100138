@@ -104,12 +104,16 @@ router.post('/login', async (req, res) => {
 
   try {
 
+    console.log('[LOGIN] INPUT:', email, password);
+
     const result = await pool.query(
-      'SELECT * FROM users WHERE email=$1',
-      [email.toLowerCase()]
+      'SELECT * FROM users WHERE LOWER(email) = LOWER($1)',
+      [email]
     );
 
     const user = result.rows[0];
+
+    console.log('[LOGIN] USER:', user);
 
     if (!user) {
       return res.status(401).json({
@@ -117,7 +121,14 @@ router.post('/login', async (req, res) => {
       });
     }
 
-    const isValid = await bcrypt.compare(password, user.password_hash);
+    console.log('[LOGIN] HASH FROM DB:', user.password_hash);
+
+    const isValid = await bcrypt.compare(
+      String(password),
+      String(user.password_hash)
+    );
+
+    console.log('[LOGIN] COMPARE RESULT:', isValid);
 
     if (!isValid) {
       return res.status(401).json({
@@ -148,10 +159,9 @@ router.post('/login', async (req, res) => {
       }
     });
 
-  } 
-  catch (err) {
-  console.error('[AUTH] Login error:', err);
-  res.status(500).json({ message: err.message });
+  } catch (err) {
+    console.error('[AUTH] Login error:', err);
+    res.status(500).json({ message: err.message });
   }
 
 });
