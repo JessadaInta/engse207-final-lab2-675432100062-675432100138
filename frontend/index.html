@@ -649,6 +649,9 @@
      JAVASCRIPT
 ════════════════════════════════════ -->
     <script>
+        const AUTH = window.APP_CONFIG.AUTH_URL;
+        const TASK = window.APP_CONFIG.TASK_URL;
+        const USER = window.APP_CONFIG.USER_URL;
         async function apiFetch(url, options = {}) {
 
                 const token = localStorage.getItem("jwt_token");
@@ -725,7 +728,7 @@
         }
     }
 
-            async function doRegister() {
+                async function doRegister() {
 
                     const username = document.getElementById('reg-name').value.trim();
                     const email = document.getElementById('reg-email').value.trim();
