@@ -7,6 +7,10 @@ const { generateToken, verifyToken } = require('../middleware/jwtUtils');
 const router = express.Router();
 
 
+router.get('/health', (req, res) => {
+  res.json({ status: 'ok', service: 'auth-service' });
+});
+
 // ─────────────────────────────────────────────
 // POST /api/auth/register
 // ─────────────────────────────────────────────

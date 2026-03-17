@@ -9,7 +9,7 @@ const router = express.Router();
 // Health Check
 // ─────────────────────────────────────────────
 router.get('/health', (req, res) => {
-  res.json({ status: 'task-service ok' });
+  res.json({ status: 'ok', service: 'task-service' });
 });
 
 // ─────────────────────────────────────────────
