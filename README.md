@@ -15,10 +15,10 @@
 
 | Service | URL |
 |--------|-----|
-| Frontend | https://frontend-production-9129.up.railway.app/index.html |
-| Auth Service | https://auth-service-production-f754.up.railway.app/api/auth/health |
-| User Service | https://task-service-production-5d53.up.railway.app/api/tasks/health |
-| Task Service | https://user-service-production-5a00.up.railway.app/api/users/health |
+| Frontend | https://frontend-production-7181.up.railway.app/ |
+| Auth Service | https://auth-service-production-aef6.up.railway.app/api/auth/health |
+| User Service | https://task-service-production-740b.up.railway.app/api/tasks/health |
+| Task Service | https://user-service-production-77a0.up.railway.app/api/users/health |
 
 ---
 
@@ -113,7 +113,7 @@ NODE_ENV=production
 🧪 Testing with curl (Cloud URLs)
 🔐 Login
 ```
-TOKEN=$(curl -s -X POST https://auth-service-production-f754.up.railway.app/api/auth/login \
+TOKEN=$(curl -s -X POST https://auth-service-production-aef6.up.railway.app/api/auth/login \
   -H "Content-Type: application/json" \
   -d '{
     "email":"testuser@example.com",
@@ -123,19 +123,19 @@ TOKEN=$(curl -s -X POST https://auth-service-production-f754.up.railway.app/api/
 ```
 👤 Get Profile
 ```
-curl https://auth-service-production-f754.up.railway.app/api/auth/me \
+curl https://auth-service-production-aef6.up.railway.app/api/auth/me \
   -H "Authorization: Bearer $TOKEN"
 
 ```
 📋 Get Tasks
 ```
-curl https://task-service-production-5d53.up.railway.app/api/tasks \
+curl https://task-service-production-740b.up.railway.app/api/tasks \
   -H "Authorization: Bearer $TOKEN"
 
 ```
 ➕ Create Task
 ```
-curl -X POST https://task-service-production-5d53.up.railway.app/api/tasks \
+curl -X POST https://task-service-production-740b.up.railway.app/api/tasks \
   -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
