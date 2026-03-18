@@ -16,6 +16,8 @@ app.use(cors({
   allowedHeaders: ['Content-Type','Authorization']
 }));
 
+app.options('*', cors());
+
 // JSON parser
 app.use(express.json());
 
