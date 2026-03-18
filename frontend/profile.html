@@ -118,7 +118,7 @@
       body: JSON.stringify({ display_name, bio, avatar_url })
     });
     const data = await res.json();
-
+    console.log("UPDATE RESPONSE:", data);
     const msgEl = document.getElementById('msg');
     if (res.ok) {
       msgEl.className = 'msg success';
